@@ -17,12 +17,12 @@ body_cascade = cv2.CascadeClassifier(
 detection = True
 detection_stopped_time = None
 timer_started = False
-
+SECONDS_TO_RECORD_AFTER_DETECTION = 5
 
 frame_size = (int(camera1.get(3)), int(camera1.get(4)))
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
-out1 = cv2.VideoWriter("video.mp4", fourcc, 20.0, frame_size)
+
 out2 = cv2.VideoWriter("video.mp4", fourcc, 20.0, frame_size)
 
 while True:
@@ -38,7 +38,23 @@ while True:
     bodies2 = body_cascade.detectMultiScale(gray2, 1.3, 5)
 
     if len(faces1) + len(bodies1) > 0:
-        detection = True
+        if detection:
+            timer_started = False
+        else:
+            detection = True
+            current_time = datetime.datetime.now().strftime("%d-%m-%Y-%H-%S")  
+            out1 = cv2.VideoWriter(f"{current_time}.mp4", fourcc, 20.0, frame_size)
+        print("Started recording!")
+    elif detection:
+        if timer_started:
+            if time.time() - detection_stopped_time >= SECONDS_TO_RECORD_AFTER_DETECTION:
+                detection = False
+                timer_started = False
+                out1.release()
+                print('Stop Recording!')
+        else:
+            timer_started = True
+            detection_stopped_time = time.time()
 
     out1.write(frame1)
     out2.write(frame2)
