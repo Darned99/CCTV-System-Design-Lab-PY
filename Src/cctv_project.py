@@ -1,0 +1,118 @@
+import cv2
+import time
+import datetime
+import os
+from pathlib import Path
+
+class CameraMonitor:
+    # Statyczny licznik instancji
+    instance_counter = 0
+
+    def __init__(self, camera_id, seconds_to_record_after_detection=5, mode=1):
+        self.camera_id = camera_id
+        self.seconds_to_record_after_detection = seconds_to_record_after_detection
+        self.mode = mode  # 1: Wykrywanie ruchu, 2: Ciągłe nagrywanie
+
+        # Przydzielenie unikalnego identyfikatora instancji
+        CameraMonitor.instance_counter += 1
+        self.instance_id = CameraMonitor.instance_counter
+
+        # Tworzenie lokalnego folderu Videos
+        self.output_dir = Path(os.path.abspath("Videos"))
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Inicjalizacja kamery
+        self.cap = cv2.VideoCapture(camera_id)
+        if not self.cap.isOpened():
+            raise ValueError(f"Camera {self.instance_id}: Unable to open stream.")
+
+        # Rozdzielczość klatek
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.frame_size = (640, 480)
+
+        # FPS i kodek
+        self.fps = self.cap.get(cv2.CAP_PROP_FPS)
+        self.fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+
+        # Inicjalizacja detekcji
+        self.detection = False
+        self.recording = True
+        self.detection_stopped_time = None
+        self.timer_started = False
+        self.out = None
+
+        # Ładowanie klasyfikatorów
+        self.face_cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        )
+        self.body_cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_fullbody.xml"
+        )
+
+    def set_mode(self, mode):
+        self.mode = mode
+
+    def process_frame(self):
+        ret, frame = self.cap.read()
+        if not ret:
+            return False
+
+        if self.mode == 1:  # Wykrywanie ruchu
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = self.face_cascade.detectMultiScale(gray, 1.4, 3)
+            bodies = self.body_cascade.detectMultiScale(gray, 1.4, 3)
+
+            if len(faces) + len(bodies) > 0:
+                if not self.detection:
+
+                    self.detection = True
+                    
+                    current_time = datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+                    
+                    video_filename = self.output_dir / f"camera_{self.instance_id}_{current_time}.mp4"
+                    
+                    self.out = cv2.VideoWriter(str(video_filename), self.fourcc, self.fps, self.frame_size)
+                
+                self.timer_started = False
+                #print('Started recording')
+            elif self.detection:
+                if not self.timer_started:
+                    
+                    self.detection_stopped_time = time.time()
+                    
+                    self.timer_started = True
+                
+                elif time.time() - self.detection_stopped_time > self.seconds_to_record_after_detection:
+                    
+                    self.detection = False
+                    
+                    self.timer_started = False
+                    
+                    if self.out:
+                        
+                        self.out.release()
+                        
+                        self.out = None
+                        
+                        print('Stopped recording')
+
+            if self.detection and self.out:
+                self.out.write(frame)
+
+        elif self.mode == 2:  # Ciągłe nagrywanie
+            if not self.out:
+                current_time = datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+                video_filename = self.output_dir / f"camera_{self.instance_id}_{current_time}.mp4"
+                self.out = cv2.VideoWriter(str(video_filename), self.fourcc, self.fps, self.frame_size)
+            self.out.write(frame)
+
+        cv2.imshow(f"Camera {self.instance_id}", frame)
+        return True
+
+    def release_resources(self):
+        if self.cap:
+            self.cap.release()
+        if self.out:
+            self.out.release()
+        cv2.destroyAllWindows()
