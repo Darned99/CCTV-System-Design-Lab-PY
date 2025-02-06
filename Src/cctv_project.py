@@ -6,48 +6,48 @@ from pathlib import Path
 import numpy as np
 
 class CameraMonitor:
-    # Statyczny licznik instancji
+    # Static instance counter
     instance_counter = 0
 
     def __init__(self, camera_id, seconds_to_record_after_detection=5, mode=1, retention_days=7):
         self.camera_id = camera_id
         self.seconds_to_record_after_detection = seconds_to_record_after_detection
-        self.mode = mode  # 1: Wykrywanie ruchu, 2: Ciągłe nagrywanie
-        self.retention_days = retention_days  # Liczba dni przechowywania nagrań
+        self.mode = mode  # 1: Motion detection, 2: Continuous recording
+        self.retention_days = retention_days  # Number of days to retain recordings
 
-        # Przydzielenie unikalnego identyfikatora instancji
+        # Assign a unique instance identifier
         CameraMonitor.instance_counter += 1
         self.instance_id = CameraMonitor.instance_counter
 
-        # Tworzenie lokalnego folderu Videos
+        # Create a local "Videos" folder
         self.output_dir = Path(os.path.abspath("Videos"))
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Usuwanie starych nagrań
+        # Remove old recordings
         self.cleanup_old_videos()
 
-        # Inicjalizacja kamery
+        # Initialize camera
         self.cap = cv2.VideoCapture(camera_id)
         if not self.cap.isOpened():
             raise ValueError(f"Camera {self.instance_id}: Unable to open stream.")
 
-        # Rozdzielczość klatek
+        # Frame resolution
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         self.frame_size = (int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
-        # FPS i kodek
+        # FPS and codec
         self.fps = self.cap.get(cv2.CAP_PROP_FPS)
         self.fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
-        # Inicjalizacja detekcji
+        # Initialize detection
         self.detection = False
         self.recording = True
         self.detection_stopped_time = None
         self.timer_started = False
         self.out = None
 
-        # Ładowanie klasyfikatorów
+        # Load classifiers
         self.face_cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         )
@@ -57,13 +57,13 @@ class CameraMonitor:
 
     def cleanup_old_videos(self):
         now = time.time()
-        retention_period = self.retention_days * 86400  # Liczba sekund w dniu
+        retention_period = self.retention_days * 86400  # Number of seconds in a day
 
         for video_file in self.output_dir.glob("*.mp4"):
             file_mod_time = video_file.stat().st_mtime
             if now - file_mod_time > retention_period:
-                video_file.unlink()  # Usuwanie pliku
-                print(f"Usunięto stary plik: {video_file}")
+                video_file.unlink()  # Delete file
+                print(f"Deleted old file: {video_file}")
 
     def set_mode(self, mode):
         self.mode = mode
@@ -73,7 +73,7 @@ class CameraMonitor:
         if not ret:
             return False
 
-        if self.mode == 1:  # Wykrywanie ruchu
+        if self.mode == 1:  # Motion detection
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
             bodies = self.body_cascade.detectMultiScale(gray, 1.3, 5)
@@ -100,7 +100,7 @@ class CameraMonitor:
             if self.detection and self.out:
                 self.out.write(frame)
 
-        elif self.mode == 2:  # Ciągłe nagrywanie
+        elif self.mode == 2:  # Continuous recording
             if not self.out:
                 current_time = datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
                 video_filename = self.output_dir / f"camera_{self.instance_id}_{current_time}.mp4"
