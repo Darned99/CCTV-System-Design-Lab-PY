@@ -24,61 +24,61 @@ def combine_frames(frames, grid_size=(2, 2)):
     return grid
 
 def main():
-    num_cameras = int(input("Podaj liczbę kamer do zainicjalizowania: "))
+    num_cameras = int(input("Enter the number of cameras to initialize: "))
 
-    #0,  # Kamera lokalna
-    #1,  # Kamera lokalna
-    # 'rtsp://admin:hikvision0987@192.168.1.67:554/Streaming/Channels/2',  # Strumień RTSP
-    # 'rtsp://admin:hikvision0987@192.168.1.68:554/Streaming/Channels/2',  # Strumień RTSP
+    # Example camera sources:
+    # 0,  # Local camera
+    # 1,  # Local camera
+    # 'rtsp://admin:hikvision0987@192.168.1.67:554/Streaming/Channels/2',  # RTSP stream
+    # 'rtsp://admin:hikvision0987@192.168.1.68:554/Streaming/Channels/2',  # RTSP stream
 
     camera_sources = []
     for i in range(num_cameras):
-        camera_id = input(f"Podaj identyfikator kamery {i+1} (np. 0, 1 lub URL strumienia RTSP): ")
+        camera_id = input(f"Enter the camera ID {i+1} (e.g., 0, 1, or RTSP stream URL): ")
         if camera_id.isdigit():
             camera_sources.append(int(camera_id))
         else:
             camera_sources.append(camera_id)
 
-    # Inicjalizacja instancji kamer
+    # Initialize camera instances
     camera_monitors = [CameraMonitor(source) for source in camera_sources]
 
     try:
-        print("Rozpoczynam monitorowanie kamer. Wciśnij '1' dla wykrywania ruchu, '2' dla ciągłego nagrywania, 'q' aby zakończyć.")
+        print("Starting camera monitoring. Press '1' for motion detection, '2' for continuous recording, 'q' to quit.")
         while True:
             frames = []
 
             for monitor in camera_monitors:
-                # Wywołanie process_frame przetwarza klatki i zarządza zapisami
+                # process_frame method handles frames and recording
                 frame = monitor.process_frame()
                 if frame is not None:
                     frames.append(frame)
 
             if frames:
-                # Wyświetlenie siatki jako jedno okno
+                # Display the grid as a single window
                 combined_frame = combine_frames(frames, grid_size=(2, 2))
                 cv2.imshow("Camera Grid", combined_frame)
 
             key = cv2.waitKey(1) & 0xFF
             if key == ord('1'):
-                print("Zmieniono tryb na wykrywanie ruchu.")
+                print("Switched to motion detection mode.")
                 for monitor in camera_monitors:
                     monitor.set_mode(1)
             elif key == ord('2'):
-                print("Zmieniono tryb na ciągłe nagrywanie.")
+                print("Switched to continuous recording mode.")
                 for monitor in camera_monitors:
                     monitor.set_mode(2)
             elif key == ord('q'):
                 break
 
     finally:
-        print("Zatrzymuję monitorowanie i zwalniam zasoby...")
+        print("Stopping monitoring and releasing resources...")
         for monitor in camera_monitors:
             frame = monitor.process_frame()
             if frame is not None:
                 frames.append(frame)
         else:
-            print(f"Kamera {monitor.camera_id} nie zwróciła klatki.")
-
+            print(f"Camera {monitor.camera_id} did not return a frame.")
 
 if __name__ == "__main__":
     main()
