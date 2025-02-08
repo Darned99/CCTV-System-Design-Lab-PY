@@ -171,6 +171,8 @@ The repository is organized as follows:
 
 3. Display of system logs
 ![image](https://github.com/user-attachments/assets/c080d698-9250-4035-a757-06d6b4b6fa34)
+![image](https://github.com/user-attachments/assets/1bf4ee4b-8e83-4e73-ae3f-b4d8abb3042e)
+
 
 
 
