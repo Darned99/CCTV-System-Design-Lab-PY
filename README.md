@@ -163,6 +163,7 @@ The repository is organized as follows:
 1. GUI with the grid of 2x2
    
 ![image](https://github.com/user-attachments/assets/e8ddf156-7c66-48bc-a1c0-20f3c3812479)
+
 2. Saved video files in the Videos directory
    
 ![image](https://github.com/user-attachments/assets/4754f471-a5dc-4b5a-bc6e-f5551078c3bf)
