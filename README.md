@@ -158,10 +158,13 @@ The repository is organized as follows:
 ## 9. Brief presentation
 ###The following are important elements of the system during commissioning such as: 
 1. GUI with the grid of 2x2
+   
 ![image](https://github.com/user-attachments/assets/e8ddf156-7c66-48bc-a1c0-20f3c3812479)
 2. Saved video files in the Videos directory
+   
 ![image](https://github.com/user-attachments/assets/4754f471-a5dc-4b5a-bc6e-f5551078c3bf)
 ![image](https://github.com/user-attachments/assets/824e9f86-998a-4f1d-a22b-e049810baf8b)
+
 3. Display of system logs
 ![image](https://github.com/user-attachments/assets/c080d698-9250-4035-a757-06d6b4b6fa34)
 
