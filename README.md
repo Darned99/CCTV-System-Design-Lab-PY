@@ -89,6 +89,9 @@ The repository is organized as follows:
     - `2` for continuous recording mode
     - `q` to exit the program
 
+   ![image](https://github.com/user-attachments/assets/ed89d2cb-f358-465b-9fe6-fa550552cb18)
+
+
 ## 5. Data Flow
 1. Each camera captures video frames and sends them to the processing unit.
 2. Frames are converted to grayscale for motion analysis. Haar Cascade classifiers detect faces and bodies.
